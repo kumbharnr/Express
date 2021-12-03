@@ -126,54 +126,64 @@ app.delete("/deleteById/:id",(req,res)=>{
     })
 })
 
+let usersTable = sequelize.define('users',{
+    uid:{
+        primaryKey:true,
+        type:Sequelize.INTEGER
+    },
+    pass:Sequelize.STRING
 
-// let userlogin = sequelize.define('users',{
-//     p_num:{
-//         primaryKey:true,
-//         type:Sequelize.INTEGER
-//     },
-//     P_H_Name:Sequelize.STRING,
-//     Amount:Sequelize.INTEGER,
-//     Maturity_amount:Sequelize.INTEGER,
-//     Nominee:Sequelize.STRING
-
-// },{
-//     timestamps:false,
-//     freezeTableName:true
-// });
-// InsuranceTable.sync().then(()=>{
+},{
+    timestamps:false,
+    freezeTableName:true
+});
+// usersTable.sync().then(()=>{
 //         console.log("table is created ");
 //     }).catch((err)=>{
 //         console.error("error is "+err);
 //     }).finally(()=>{
 //         sequelize.close();
 //     })
-// app.use(express.json());
-// app.post("/login",(req,res)=>{
-//     console.log("logging into web page");
-//     var uid = req.body.uid;
-//     var pass = req.body.pass;
 
-//     console.log(`the give UID :${uid} and password is :${pass}`);
-//     InsuranceTable.findAll({raw:true}).then(data=>{
-//         console.log(data);
-//         res.status(200).send(data);
-    
-//     }).catch(err=>{
-//         console.error("error is :"+err);
-//         res.status(400).send(err);
-//     })
-//     if (uid=="navnath" && pass==123)
-//     {
-        
-//         // console.log("your valid user");
-//         res.send("valid user")
-        
-//     }
-    
-//     res.send("Not valid crediantial please enter valid uid and password")
+app.post("/login",(req,res)=>{
+    var uid =req.body.uid;
+    var pass = req.body.pass;
 
-// });
+    fl = false;
+    const Op = Sequelize.Op;
+
+    usersTable.findAll({where:{[Op.and]:[{uid:uid},{pass:pass}]},
+        raw:true,
+    }).then((data)=>{
+        console.log(data);
+        console.log(typeof data);
+        if(data){
+            fl =true;
+        }
+    });
+    if(fl){
+        var strMsg="your valid user";
+        res.status(201).send(strMsg);
+    }else{
+        var strMsg ="valid users enter correct details";
+        res.status(401).send(strMsg);
+    }
+
+})
+
+app.post("/register",(req,res)=>{
+    var uid = req.body.uid;
+    var pass = req.body.pass;
+    
+    var userObj = usersTable.build({uid:uid,pass:pass});
+    userObj.save().then(data=>{
+        var stri = "record is inserted";
+        res.status(201).send(stri);
+    }).catch(err=>{
+        console.error("error is :"+err);
+        res.status(400).send(err);
+    })
+})
 
 app.listen(8000,()=>{
     console.log("server is listening at 8000");
